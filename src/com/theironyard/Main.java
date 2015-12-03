@@ -36,9 +36,24 @@ public class Main extends Application {
     void drawAnts(GraphicsContext context){
         context.clearRect(0,0,WIDTH,HEIGHT);
         for (Ant ant : ants){
-            context.setFill(Color.RED);
+            context.setFill(ant.color);
             context.fillOval(ant.x, ant.y,5,5);
         }
+    }
+
+    Ant aggravateAnt(Ant ant){
+        ArrayList<Ant> closeAnts = ants.parallelStream()
+                .filter(ant2 -> {
+                    return  (Math.abs(ant.x - ant2.x) <=10 && Math.abs(ant.y - ant2.y) <=10);
+                })
+                .collect(Collectors.toCollection(ArrayList<Ant>::new));
+        if (closeAnts.size() > 1){
+            ant.color = Color.RED;
+        }
+        else{
+            ant.color = Color.BLACK;
+        }
+        return ant;
     }
 
     double randomStep(){
@@ -60,6 +75,7 @@ public class Main extends Application {
     void updateAnts(){
         ants = ants.parallelStream()
                 .map(this::moveAnt)
+                .map(this::aggravateAnt)
                 .collect(Collectors.toCollection(ArrayList<Ant>::new));
     }
     int fps(long now){
@@ -67,7 +83,6 @@ public class Main extends Application {
         double diffSeconds = diff/1000000000;
         return (int)(1 / diffSeconds);
     }
-
 
     @Override
     public void start(Stage primaryStage) throws Exception{
